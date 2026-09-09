@@ -9,26 +9,37 @@ dotenv.config();
 
 const app = express();
 
-// Start Server
-const port = process.env.PORT || 7000;
-
-
-app.use(cors());
+app.use(
+    cors({
+        origin: "*",
+        methods: ["GET", "POST", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
 app.use(express.json());
 
-
-// Routes
 app.use("/api/products", productRoutes);
 
-
-// Test Route
 app.get("/", (req, res) => {
     res.json({
         message: "Stock API is running"
     });
 });
 
-app.listen(port, "0.0.0.0", async () => {
-    console.log(`Server running on port ${port}`);
-    await connectDB();
-});
+const port = process.env.PORT || 7000;
+
+const startServer = async () => {
+    try {
+        await connectDB();
+        console.log("Database ready");
+
+        app.listen(port, "0.0.0.0", () => {
+            console.log(`Server running on port ${port}`);
+        });
+    } catch (error) {
+        console.error("Database connection failed:", error.message);
+        process.exit(1);
+    }
+};
+
+startServer();
