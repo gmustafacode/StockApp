@@ -12,7 +12,7 @@ const app = express();
 app.use(
     cors({
         origin: "*",
-        methods: ["GET", "POST", "OPTIONS"],
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization"],
     })
 );
@@ -28,18 +28,17 @@ app.get("/", (req, res) => {
 
 const port = process.env.PORT || 7000;
 
-const startServer = async () => {
-    try {
-        await connectDB();
-        console.log("Database ready");
+// Connect to DB eagerly so it's ready when Vercel reuses the serverless container
+connectDB().catch((error) => {
+    console.error("Database connection failed:", error.message);
+});
 
-        app.listen(port, "0.0.0.0", () => {
-            console.log(`Server running on port ${port}`);
-        });
-    } catch (error) {
-        console.error("Database connection failed:", error.message);
-        process.exit(1);
-    }
-};
+// For local development
+if (process.env.NODE_ENV !== "production") {
+    app.listen(port, "0.0.0.0", () => {
+        console.log(`Server running on port ${port}`);
+    });
+}
 
-startServer();
+// Export for Vercel serverless
+export default app;
